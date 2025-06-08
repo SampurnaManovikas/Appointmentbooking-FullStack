@@ -199,7 +199,7 @@ const Confirmation: React.FC = () => {
           <h3 className="text-sm font-medium text-gray-800 mb-2">Contact Information</h3>
           <div className="text-sm text-gray-600 space-y-1">
             <p><strong>Sampurna Manovikas</strong></p>
-            <p>123 Medical Center Drive</p>
+            {/* <p>123 Medical Center Drive</p> */}
             <p>347, Chikkegowdanapalya, 3rd block</p>
             <p>Banashankari Stage 6, Bengaluru, Karnataka 560062</p>
             <p>Phone:+919008102777</p>
