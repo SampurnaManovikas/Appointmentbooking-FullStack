@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from './Calendar';
 import TimeSlots from './TimeSlots';
 import ClientInformation from './ClientInformation';
-import { CheckCircle, Circle } from 'lucide-react';
+import { CheckCircle, Circle, Loader2 } from 'lucide-react';
+import { createBooking } from './services/bookingService';
+import { sendAppointmentEmails } from './services/emailService';
+import { validateFormData, sanitizeBookingData } from './utils/validation';
 
 interface AppointmentData {
   date: Date | null;
@@ -18,6 +21,7 @@ interface AppointmentData {
 const AppointmentBooking: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [appointmentData, setAppointmentData] = useState<AppointmentData>({
     date: null,
     time: '',
@@ -45,7 +49,7 @@ const AppointmentBooking: React.FC = () => {
     setAppointmentData({ ...appointmentData, [name]: value });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1 && !appointmentData.date) {
       alert('Please select a date');
       return;
@@ -56,63 +60,91 @@ const AppointmentBooking: React.FC = () => {
       return;
     }
 
-  if (step < 3) {
-    setStep(step + 1);
-  } else {
-    // Save data
-    localStorage.setItem('appointmentData', JSON.stringify(appointmentData));
-
-    // Send email
-    await sendEmail();
-
-    // Navigate to confirmation page
-    navigate('/confirmation');
-  }
-
-
-
-
-
-
-    
-    // if (step < 3) {
-    //   setStep(step + 1);
-    // } else {
-    //   // Submit the form and navigate to confirmation
-    //   localStorage.setItem('appointmentData', JSON.stringify(appointmentData));
-    //   navigate('/confirmation');
-    // }
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      // Final step - submit the booking
+      await handleBookingSubmission();
+    }
   };
 
-const sendEmail = async () => {
-  try {
-    const response = await fetch('http://localhost:3000/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: appointmentData.clientEmail,
-        subject: `Appointment Confirmation for ${appointmentData.clientName}`,
-        text: `Dear ${appointmentData.clientName},
+  const handleBookingSubmission = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Validate form data
+      const validation = validateFormData(appointmentData);
+      if (!validation.isValid) {
+        alert(`Please fix the following errors:\n${validation.errors.join('\n')}`);
+        setIsSubmitting(false);
+        return;
+      }
 
-Your appointment is confirmed for ${appointmentData.date?.toDateString()} at ${appointmentData.time} via ${appointmentData.sessionType} session.
+      // Sanitize and prepare booking data
+      const sanitizedData = sanitizeBookingData({
+        date: appointmentData.date!.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        time: appointmentData.time,
+        clientName: appointmentData.clientName,
+        clientPhone: appointmentData.clientPhone,
+        clientEmail: appointmentData.clientEmail,
+        sessionType: appointmentData.sessionType,
+        notes: appointmentData.notes
+      });
 
-Thank you for booking with us!`,
-      }),
-    });
+      // Create the booking
+      console.log('Creating booking with data:', sanitizedData);
+      const newBooking = await createBooking(sanitizedData);
+      console.log('Booking created successfully:', newBooking);
 
-    if (!response.ok) throw new Error('Email sending failed');
-    alert('Appointment confirmed and email sent!');
-  } catch (error) {
-    alert('Failed to send confirmation email.');
-    console.error(error);
-  }
-};
+      // Prepare email data
+      const emailData = {
+        clientName: appointmentData.clientName,
+        clientEmail: appointmentData.clientEmail,
+        clientPhone: appointmentData.clientPhone,
+        appointmentDate: appointmentData.date!.toISOString().split('T')[0],
+        appointmentTime: appointmentData.time,
+        sessionType: appointmentData.sessionType,
+        notes: appointmentData.notes,
+        bookingId: newBooking.id
+      };
 
+      // Send confirmation emails
+      console.log('Sending confirmation emails...');
+      const emailResult = await sendAppointmentEmails(emailData);
+      console.log('Email result:', emailResult);
 
+      // Save booking data with email status for confirmation page
+      const bookingDataForStorage = {
+        ...appointmentData,
+        bookingId: newBooking.id,
+        emailStatus: emailResult
+      };
 
+      localStorage.setItem('appointmentData', JSON.stringify(bookingDataForStorage));
 
+      // Navigate to confirmation page
+      navigate('/confirmation');
 
-
+    } catch (error) {
+      console.error('Booking submission failed:', error);
+      
+      let errorMessage = 'Failed to confirm booking. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('time slot is already booked')) {
+          errorMessage = 'This time slot is no longer available. Please select a different time.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else {
+          errorMessage = `Booking failed: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleBack = () => {
     if (step > 1) {
@@ -175,7 +207,8 @@ Thank you for booking with us!`,
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Select a Time</h2>
                 <TimeSlots 
                   selectedTime={appointmentData.time} 
-                  onTimeSelect={handleTimeSelection} 
+                  onTimeSelect={handleTimeSelection}
+                  selectedDate={appointmentData.date}
                 />
               </div>
               
@@ -248,9 +281,9 @@ Thank you for booking with us!`,
           <button
             type="button"
             onClick={handleBack}
-            disabled={step === 1}
+            disabled={step === 1 || isSubmitting}
             className={`px-4 py-2 rounded-md ${
-              step === 1 
+              step === 1 || isSubmitting
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             } transition-colors`}
@@ -261,9 +294,21 @@ Thank you for booking with us!`,
           <button
             type="button"
             onClick={handleNext}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            disabled={isSubmitting}
+            className={`px-6 py-2 rounded-md font-medium transition-colors flex items-center ${
+              isSubmitting
+                ? 'bg-blue-400 text-white cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
-            {step === 3 ? 'Confirm Booking' : 'Next'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {step === 3 ? 'Confirming...' : 'Processing...'}
+              </>
+            ) : (
+              step === 3 ? 'Confirm Booking' : 'Next'
+            )}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-import { getBookingsForDate } from './services/bookingService';
+import { getBookedSlots } from './services/bookingService';
 
 interface TimeSlotsProps {
   selectedTime: string;
@@ -46,8 +46,8 @@ const TimeSlots: React.FC<TimeSlotsProps> = ({ selectedTime, onTimeSelect, selec
         // Format date for API call (YYYY-MM-DD)
         const dateString = selectedDate.toISOString().split('T')[0];
         
-        // Fetch existing bookings for the selected date
-        const bookedSlots = await getBookingsForDate(dateString);
+        // Fetch booked time slots for the selected date
+        const bookedSlots = await getBookedSlots(dateString);
         
         // Create time slots array with availability status
         const slotsWithAvailability = allTimeSlots.map(time => ({

@@ -37,7 +37,7 @@ export interface ApiResponse<T> {
 export const getBookedSlots = async (date: string): Promise<string[]> => {
   try {
     const response = await apiClient.get<ApiResponse<string[]>>(`/bookings/slots/${date}`);
-    return response.data.data;
+    return response.data || [];
   } catch (error) {
     console.error('Error fetching booked slots:', error);
     return []; // Return empty array on error to prevent UI breaking
@@ -50,7 +50,7 @@ export const getBookedSlots = async (date: string): Promise<string[]> => {
 export const getBookingsForDate = async (date: string): Promise<Booking[]> => {
   try {
     const response = await apiClient.get<ApiResponse<Booking[]>>(`/bookings/date/${date}`);
-    return response.data.data;
+    return response.data || [];
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return [];
@@ -70,8 +70,11 @@ export const createBooking = async (bookingData: CreateBookingData): Promise<Boo
       clientEmail: bookingData.clientEmail.trim().toLowerCase()
     };
 
+    console.log('Sending booking data to API:', sanitizedData);
     const response = await apiClient.post<ApiResponse<Booking>>('/bookings', sanitizedData);
-    return response.data.data;  // <-- Correctly returning the nested data
+    console.log('API response:', response);
+    
+    return response.data;
   } catch (error) {
     console.error('Error creating booking:', error);
     throw error;
@@ -84,7 +87,7 @@ export const createBooking = async (bookingData: CreateBookingData): Promise<Boo
 export const getBookingById = async (id: string): Promise<Booking | null> => {
   try {
     const response = await apiClient.get<ApiResponse<Booking>>(`/bookings/${id}`);
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error('Error fetching booking:', error);
     return null;
@@ -100,7 +103,7 @@ export const updateBookingStatus = async (
 ): Promise<Booking | null> => {
   try {
     const response = await apiClient.patch<ApiResponse<Booking>>(`/bookings/${id}/status`, { status });
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error('Error updating booking status:', error);
     throw error;
