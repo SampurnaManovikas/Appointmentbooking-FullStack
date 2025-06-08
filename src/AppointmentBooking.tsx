@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Calendar from './Calendar';
 import TimeSlots from './TimeSlots';
 import ClientInformation from './ClientInformation';
-import { CheckCircle, Circle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { validateFormData } from './utils/validation';
-import { createBooking } from './services/bookingService';
-import { sendAppointmentEmails } from './services/emailService';
+import { CheckCircle, Circle } from 'lucide-react';
 
 interface AppointmentData {
   date: Date | null;
@@ -18,11 +15,9 @@ interface AppointmentData {
   notes: string;
 }
 
-const AppointmentBooking: React.FC = (): JSX.Element => {
+const AppointmentBooking: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errors, setErrors] = useState<string[]>([]);
   const [appointmentData, setAppointmentData] = useState<AppointmentData>({
     date: null,
     time: '',
@@ -33,242 +28,242 @@ const AppointmentBooking: React.FC = (): JSX.Element => {
     notes: '',
   });
 
-  useEffect(() => {
-    console.log('Step changed to:', step);
-  }, [step]);
-
-  const handleDateSelection = (date: Date): void => {
-    setAppointmentData({ ...appointmentData, date, time: '' });
-    setErrors([]);
+  const handleDateSelection = (date: Date) => {
+    setAppointmentData({ ...appointmentData, date });
   };
 
-  const handleTimeSelection = (time: string): void => {
+  const handleTimeSelection = (time: string) => {
     setAppointmentData({ ...appointmentData, time });
-    setErrors([]);
   };
 
-  const handleSessionTypeChange = (type: 'in-person' | 'video' | 'phone'): void => {
+  const handleSessionTypeChange = (type: 'in-person' | 'video' | 'phone') => {
     setAppointmentData({ ...appointmentData, sessionType: type });
   };
 
-  const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+  const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setAppointmentData({ ...appointmentData, [name]: value });
-    setErrors([]);
   };
 
-  const handleNext = async (): Promise<void> => {
-    setErrors([]);
-
+  const handleNext = () => {
     if (step === 1 && !appointmentData.date) {
-      setErrors(['Please select a date']);
+      alert('Please select a date');
       return;
     }
-
+    
     if (step === 2 && !appointmentData.time) {
-      setErrors(['Please select a time slot']);
+      alert('Please select a time slot');
       return;
     }
 
-    if (step < 3) {
-      setStep((prev) => prev + 1);
-    } else {
-      const validation = validateFormData({
-        clientName: appointmentData.clientName,
-        clientPhone: appointmentData.clientPhone,
-        clientEmail: appointmentData.clientEmail,
-        date: appointmentData.date,
-        time: appointmentData.time,
-      });
+  if (step < 3) {
+    setStep(step + 1);
+  } else {
+    // Save data
+    localStorage.setItem('appointmentData', JSON.stringify(appointmentData));
 
-      if (!validation.isValid) {
-        setErrors(validation.errors);
-        return;
-      }
+    // Send email
+    await sendEmail();
 
-      await handleBookingSubmission();
-    }
+    // Navigate to confirmation page
+    navigate('/confirmation');
+  }
+
+
+
+
+
+
+    
+    // if (step < 3) {
+    //   setStep(step + 1);
+    // } else {
+    //   // Submit the form and navigate to confirmation
+    //   localStorage.setItem('appointmentData', JSON.stringify(appointmentData));
+    //   navigate('/confirmation');
+    // }
   };
 
-  const handleBookingSubmission = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const bookingData = {
-        date: appointmentData.date!.toISOString().split('T')[0],
-        time: appointmentData.time,
-        clientName: appointmentData.clientName,
-        clientPhone: appointmentData.clientPhone.replace(/\D/g, ''),
-        clientEmail: appointmentData.clientEmail,
-        sessionType: appointmentData.sessionType,
-        notes: appointmentData.notes,
-      };
+const sendEmail = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: appointmentData.clientEmail,
+        subject: `Appointment Confirmation for ${appointmentData.clientName}`,
+        text: `Dear ${appointmentData.clientName},
 
-      const createdBooking = await createBooking(bookingData);
+Your appointment is confirmed for ${appointmentData.date?.toDateString()} at ${appointmentData.time} via ${appointmentData.sessionType} session.
 
-      const emailData = {
-        clientName: appointmentData.clientName,
-        clientEmail: appointmentData.clientEmail,
-        clientPhone: appointmentData.clientPhone,
-        appointmentDate: appointmentData.date!.toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        }),
-        appointmentTime: appointmentData.time,
-        sessionType: appointmentData.sessionType,
-        notes: appointmentData.notes,
-      };
+Thank you for booking with us!`,
+      }),
+    });
 
-      const emailResults = await sendAppointmentEmails(emailData);
+    if (!response.ok) throw new Error('Email sending failed');
+    alert('Appointment confirmed and email sent!');
+  } catch (error) {
+    alert('Failed to send confirmation email.');
+    console.error(error);
+  }
+};
 
-      const confirmationData = {
-        ...appointmentData,
-        bookingId: createdBooking.id,
-        emailStatus: emailResults,
-      };
 
-      localStorage.setItem('appointmentData', JSON.stringify(confirmationData));
 
-      navigate('/confirmation');
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      setErrors(['Failed to create booking. Please try again.']);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleBack = (): void => {
+
+
+
+  const handleBack = () => {
     if (step > 1) {
-      setStep((prev) => prev - 1);
-      setErrors([]);
+      setStep(step - 1);
     }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">Book an Appointment with Dr. Kiran S. Sawekar</h1>
-          <Link to="/" className="text-white hover:text-blue-100 transition-colors flex items-center">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Profile
-          </Link>
-        </div>
+        <h1 className="text-xl font-bold text-white">Book an Appointment with Dr. Kiran S. Sawekar</h1>
       </div>
-
+      
       <div className="p-6">
         {/* Progress Steps */}
         <div className="flex items-center mb-8">
-          {[1, 2, 3].map((currentStep) => (
-            <React.Fragment key={currentStep}>
-              <div className="flex items-center">
-                {step >= currentStep ? (
-                  <CheckCircle className="h-8 w-8 text-blue-500" />
-                ) : (
-                  <Circle className="h-8 w-8 text-gray-300" />
-                )}
-                <span className={`ml-2 text-sm font-medium ${step >= currentStep ? 'text-blue-500' : 'text-gray-500'}`}>
-                  {currentStep === 1 && 'Date Selection'}
-                  {currentStep === 2 && 'Time & Type'}
-                  {currentStep === 3 && 'Your Information'}
-                </span>
-              </div>
-              {currentStep !== 3 && (
-                <div className={`flex-1 h-0.5 mx-4 ${step > currentStep ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Errors */}
-        {errors.length > 0 && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-              <div>
-                <h3 className="text-sm font-medium text-red-800">Please correct the following errors:</h3>
-                <ul className="mt-1 text-sm text-red-700 list-disc list-inside">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+          <div className="flex items-center">
+            {step >= 1 ? (
+              <CheckCircle className="h-8 w-8 text-blue-500" />
+            ) : (
+              <Circle className="h-8 w-8 text-gray-300" />
+            )}
+            <span className={`ml-2 text-sm font-medium ${step >= 1 ? 'text-blue-500' : 'text-gray-500'}`}>Date Selection</span>
           </div>
-        )}
-
-        {/* Step content */}
-        <div>
+          <div className={`flex-1 h-0.5 mx-4 ${step >= 2 ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
+          <div className="flex items-center">
+            {step >= 2 ? (
+              <CheckCircle className="h-8 w-8 text-blue-500" />
+            ) : (
+              <Circle className="h-8 w-8 text-gray-300" />
+            )}
+            <span className={`ml-2 text-sm font-medium ${step >= 2 ? 'text-blue-500' : 'text-gray-500'}`}>Time & Type</span>
+          </div>
+          <div className={`flex-1 h-0.5 mx-4 ${step >= 3 ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
+          <div className="flex items-center">
+            {step >= 3 ? (
+              <CheckCircle className="h-8 w-8 text-blue-500" />
+            ) : (
+              <Circle className="h-8 w-8 text-gray-300" />
+            )}
+            <span className={`ml-2 text-sm font-medium ${step >= 3 ? 'text-blue-500' : 'text-gray-500'}`}>Your Information</span>
+          </div>
+        </div>
+        
+        {/* Step Content */}
+        <div className="transition-all duration-300 ease-in-out">
           {step === 1 && (
             <div className="animate-fadeIn">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Select a Date</h2>
-              <Calendar selectedDate={appointmentData.date} onDateSelect={handleDateSelection} />
+              <Calendar 
+                selectedDate={appointmentData.date} 
+                onDateSelect={handleDateSelection} 
+              />
             </div>
           )}
-
+          
           {step === 2 && (
             <div className="animate-fadeIn">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Select a Time</h2>
-              <TimeSlots
-                selectedTime={appointmentData.time}
-                onTimeSelect={handleTimeSelection}
-                selectedDate={appointmentData.date}
-              />
-
-              <h2 className="text-lg font-semibold text-gray-800 mt-6 mb-4">Session Type</h2>
-              <div className="flex flex-wrap gap-4">
-                {['in-person', 'video', 'phone'].map((type) => (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Select a Time</h2>
+                <TimeSlots 
+                  selectedTime={appointmentData.time} 
+                  onTimeSelect={handleTimeSelection} 
+                />
+              </div>
+              
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Session Type</h2>
+                <div className="flex flex-wrap gap-4">
                   <button
-                    key={type}
                     type="button"
-                    onClick={() => handleSessionTypeChange(type as 'in-person' | 'video' | 'phone')}
+                    onClick={() => handleSessionTypeChange('in-person')}
                     className={`flex items-center px-4 py-3 rounded-lg border ${
-                      appointmentData.sessionType === type
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      appointmentData.sessionType === 'in-person' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
                         : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                     } transition-colors`}
                   >
-                    <span className="capitalize">{type.replace('-', ' ')}</span>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    In-Person
                   </button>
-                ))}
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleSessionTypeChange('video')}
+                    className={`flex items-center px-4 py-3 rounded-lg border ${
+                      appointmentData.sessionType === 'video' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                    } transition-colors`}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Video Call
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleSessionTypeChange('phone')}
+                    className={`flex items-center px-4 py-3 rounded-lg border ${
+                      appointmentData.sessionType === 'phone' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                    } transition-colors`}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    Phone Call
+                  </button>
+                </div>
               </div>
             </div>
           )}
-
+          
           {step === 3 && (
             <div className="animate-fadeIn">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Your Information</h2>
-              <ClientInformation data={appointmentData} onChange={handleClientInfoChange} />
+              <ClientInformation 
+                data={appointmentData} 
+                onChange={handleClientInfoChange} 
+              />
             </div>
           )}
         </div>
-
-        {/* Navigation */}
+        
+        {/* Navigation Buttons */}
         <div className="flex justify-between mt-8">
           <button
             type="button"
             onClick={handleBack}
             disabled={step === 1}
             className={`px-4 py-2 rounded-md ${
-              step === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              step === 1 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             } transition-colors`}
           >
             Back
           </button>
-
+          
           <button
             type="button"
             onClick={handleNext}
-            disabled={loading}
-            className={`px-6 py-2 rounded-md ${
-              loading
-                ? 'bg-blue-300 text-white cursor-wait'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            } transition-colors`}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            {step < 3 ? 'Next' : 'Book Appointment'}
+            {step === 3 ? 'Confirm Booking' : 'Next'}
           </button>
         </div>
       </div>
