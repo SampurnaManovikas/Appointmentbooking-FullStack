@@ -39,7 +39,7 @@ const generateId = () => {
 /**
  * Get all bookings for a specific date
  */
-const getBookingsByDate = async (date) => {
+export const getBookingsByDate = async (date) => {
   return bookings.filter(booking => 
     booking.date === date && booking.status !== 'cancelled'
   );
@@ -48,7 +48,7 @@ const getBookingsByDate = async (date) => {
 /**
  * Get booked time slots for a specific date
  */
-const getBookedTimeSlots = async (date) => {
+export const getBookedTimeSlots = async (date) => {
   const dateBookings = await getBookingsByDate(date);
   return dateBookings.map(booking => booking.time);
 };
@@ -56,7 +56,7 @@ const getBookedTimeSlots = async (date) => {
 /**
  * Check if a time slot is available
  */
-const isTimeSlotAvailable = async (date, time) => {
+export const isTimeSlotAvailable = async (date, time) => {
   const bookedSlots = await getBookedTimeSlots(date);
   return !bookedSlots.includes(time);
 };
@@ -64,7 +64,7 @@ const isTimeSlotAvailable = async (date, time) => {
 /**
  * Create a new booking
  */
-const createBooking = async (bookingData) => {
+export const createBooking = async (bookingData) => {
   const newBooking = {
     id: generateId(),
     ...bookingData,
@@ -80,14 +80,14 @@ const createBooking = async (bookingData) => {
 /**
  * Get booking by ID
  */
-const getBookingById = async (id) => {
+export const getBookingById = async (id) => {
   return bookings.find(booking => booking.id === id);
 };
 
 /**
  * Update booking status
  */
-const updateBookingStatus = async (id, status) => {
+export const updateBookingStatus = async (id, status) => {
   const bookingIndex = bookings.findIndex(booking => booking.id === id);
   
   if (bookingIndex === -1) {
@@ -106,7 +106,7 @@ const updateBookingStatus = async (id, status) => {
 /**
  * Delete booking
  */
-const deleteBooking = async (id) => {
+export const deleteBooking = async (id) => {
   const bookingIndex = bookings.findIndex(booking => booking.id === id);
   
   if (bookingIndex === -1) {
@@ -120,17 +120,6 @@ const deleteBooking = async (id) => {
 /**
  * Get all bookings (for admin purposes)
  */
-const getAllBookings = async () => {
+export const getAllBookings = async () => {
   return bookings;
-};
-
-module.exports = {
-  getBookingsByDate,
-  getBookedTimeSlots,
-  isTimeSlotAvailable,
-  createBooking,
-  getBookingById,
-  updateBookingStatus,
-  deleteBooking,
-  getAllBookings
 };

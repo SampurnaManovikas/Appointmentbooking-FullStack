@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 /**
  * Phone number validation schema
@@ -90,7 +90,7 @@ const emailDataSchema = Joi.object({
 /**
  * Validate booking data middleware
  */
-const validateBooking = (req, res, next) => {
+export const validateBooking = (req, res, next) => {
   const { error, value } = bookingSchema.validate(req.body, { 
     abortEarly: false,
     stripUnknown: true 
@@ -137,7 +137,7 @@ const validateBooking = (req, res, next) => {
 /**
  * Validate date query parameter
  */
-const validateDateQuery = (req, res, next) => {
+export const validateDateQuery = (req, res, next) => {
   const { error } = dateSchema.validate(req.params.date);
   
   if (error) {
@@ -153,7 +153,7 @@ const validateDateQuery = (req, res, next) => {
 /**
  * Validate email data middleware
  */
-const validateEmailData = (req, res, next) => {
+export const validateEmailData = (req, res, next) => {
   const { error, value } = emailDataSchema.validate(req.body, { 
     abortEarly: false,
     stripUnknown: true 
@@ -179,14 +179,14 @@ const validateEmailData = (req, res, next) => {
 /**
  * Sanitize phone number (remove formatting)
  */
-const sanitizePhoneNumber = (phone) => {
+export const sanitizePhoneNumber = (phone) => {
   return phone.replace(/\D/g, '');
 };
 
 /**
  * Validate and sanitize phone number
  */
-const validatePhoneNumber = (phone) => {
+export const validatePhoneNumber = (phone) => {
   const sanitized = sanitizePhoneNumber(phone);
   const { error } = phoneSchema.validate(sanitized);
   
@@ -200,20 +200,11 @@ const validatePhoneNumber = (phone) => {
 /**
  * Validate email format
  */
-const validateEmailFormat = (email) => {
+export const validateEmailFormat = (email) => {
   const { error } = emailSchema.validate(email);
   
   return {
     isValid: !error,
     error: error ? error.details[0].message : null
   };
-};
-
-module.exports = {
-  validateBooking,
-  validateDateQuery,
-  validateEmailData,
-  validatePhoneNumber,
-  validateEmailFormat,
-  sanitizePhoneNumber
 };

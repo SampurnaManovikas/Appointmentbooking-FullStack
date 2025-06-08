@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 // Email configuration
 const createTransporter = () => {
@@ -234,7 +234,7 @@ const generateAdminEmailHTML = (data) => {
 /**
  * Send confirmation emails to both client and admin
  */
-const sendConfirmationEmails = async (emailData) => {
+export const sendConfirmationEmails = async (emailData) => {
   const transporter = createTransporter();
   
   const results = {
@@ -287,7 +287,7 @@ const sendConfirmationEmails = async (emailData) => {
 /**
  * Send reminder emails (for future use)
  */
-const sendReminderEmails = async (emailData) => {
+export const sendReminderEmails = async (emailData) => {
   // Implementation for reminder emails
   // This can be used for automated reminders before appointments
   return { reminderSent: true };
@@ -296,7 +296,7 @@ const sendReminderEmails = async (emailData) => {
 /**
  * Test email configuration
  */
-const testEmailConfiguration = async () => {
+export const testEmailConfiguration = async () => {
   try {
     const transporter = createTransporter();
     await transporter.verify();
@@ -311,10 +311,4 @@ const testEmailConfiguration = async () => {
       error: error.message 
     };
   }
-};
-
-module.exports = {
-  sendConfirmationEmails,
-  sendReminderEmails,
-  testEmailConfiguration
 };

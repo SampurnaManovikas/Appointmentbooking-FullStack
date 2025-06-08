@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { validateEmailData } from '../middleware/validation.js';
+import * as emailController from '../controllers/emailController.js';
+
 const router = express.Router();
-const { validateEmailData } = require('../middleware/validation');
-const emailController = require('../controllers/emailController');
 
 // Send appointment confirmation emails
 router.post('/send-confirmation', validateEmailData, emailController.sendConfirmationEmails);
@@ -12,4 +13,4 @@ router.post('/send-reminder', validateEmailData, emailController.sendReminderEma
 // Test email configuration
 router.post('/test', emailController.testEmailConfiguration);
 
-module.exports = router;
+export default router;

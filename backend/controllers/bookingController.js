@@ -1,10 +1,10 @@
-const bookingService = require('../services/bookingService');
-const emailService = require('../services/emailService');
+import * as bookingService from '../services/bookingService.js';
+import * as emailService from '../services/emailService.js';
 
 /**
  * Get all bookings for a specific date
  */
-const getBookingsByDate = async (req, res, next) => {
+export const getBookingsByDate = async (req, res, next) => {
   try {
     const { date } = req.params;
     const bookings = await bookingService.getBookingsByDate(date);
@@ -22,7 +22,7 @@ const getBookingsByDate = async (req, res, next) => {
 /**
  * Get booked time slots for a specific date
  */
-const getBookedSlots = async (req, res, next) => {
+export const getBookedSlots = async (req, res, next) => {
   try {
     const { date } = req.params;
     const bookedSlots = await bookingService.getBookedTimeSlots(date);
@@ -39,7 +39,7 @@ const getBookedSlots = async (req, res, next) => {
 /**
  * Create a new booking
  */
-const createBooking = async (req, res, next) => {
+export const createBooking = async (req, res, next) => {
   try {
     const bookingData = req.body;
     
@@ -87,7 +87,7 @@ const createBooking = async (req, res, next) => {
 /**
  * Get booking by ID
  */
-const getBookingById = async (req, res, next) => {
+export const getBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const booking = await bookingService.getBookingById(id);
@@ -111,7 +111,7 @@ const getBookingById = async (req, res, next) => {
 /**
  * Update booking status
  */
-const updateBookingStatus = async (req, res, next) => {
+export const updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -138,7 +138,7 @@ const updateBookingStatus = async (req, res, next) => {
 /**
  * Delete booking
  */
-const deleteBooking = async (req, res, next) => {
+export const deleteBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
     const deleted = await bookingService.deleteBooking(id);
@@ -157,13 +157,4 @@ const deleteBooking = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
-
-module.exports = {
-  getBookingsByDate,
-  getBookedSlots,
-  createBooking,
-  getBookingById,
-  updateBookingStatus,
-  deleteBooking
 };

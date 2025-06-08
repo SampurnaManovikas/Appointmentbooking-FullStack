@@ -1,9 +1,9 @@
-const emailService = require('../services/emailService');
+import * as emailService from '../services/emailService.js';
 
 /**
  * Send appointment confirmation emails
  */
-const sendConfirmationEmails = async (req, res, next) => {
+export const sendConfirmationEmails = async (req, res, next) => {
   try {
     const emailData = req.body;
     
@@ -27,7 +27,7 @@ const sendConfirmationEmails = async (req, res, next) => {
 /**
  * Send appointment reminder emails
  */
-const sendReminderEmails = async (req, res, next) => {
+export const sendReminderEmails = async (req, res, next) => {
   try {
     const emailData = req.body;
     
@@ -46,7 +46,7 @@ const sendReminderEmails = async (req, res, next) => {
 /**
  * Test email configuration
  */
-const testEmailConfiguration = async (req, res, next) => {
+export const testEmailConfiguration = async (req, res, next) => {
   try {
     const testResult = await emailService.testEmailConfiguration();
     
@@ -58,10 +58,4 @@ const testEmailConfiguration = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
-
-module.exports = {
-  sendConfirmationEmails,
-  sendReminderEmails,
-  testEmailConfiguration
 };

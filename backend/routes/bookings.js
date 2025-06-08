@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { validateBooking, validateDateQuery } from '../middleware/validation.js';
+import * as bookingController from '../controllers/bookingController.js';
+
 const router = express.Router();
-const { validateBooking, validateDateQuery } = require('../middleware/validation');
-const bookingController = require('../controllers/bookingController');
 
 // Get all bookings for a specific date
 router.get('/date/:date', validateDateQuery, bookingController.getBookingsByDate);
@@ -21,4 +22,4 @@ router.patch('/:id/status', bookingController.updateBookingStatus);
 // Delete booking (admin only)
 router.delete('/:id', bookingController.deleteBooking);
 
-module.exports = router;
+export default router;
