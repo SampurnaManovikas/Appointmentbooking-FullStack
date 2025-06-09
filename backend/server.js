@@ -27,6 +27,7 @@ app.use(limiter);
 // CORS configuration - Allow requests from your Netlify frontend
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://localhost:5173',
   'http://localhost:3000',
   'https://appointmentbooking-fullstack.netlify.app',
   process.env.FRONTEND_URL
