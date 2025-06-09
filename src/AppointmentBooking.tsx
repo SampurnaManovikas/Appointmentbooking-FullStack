@@ -135,6 +135,8 @@ const AppointmentBooking: React.FC = () => {
           errorMessage = 'This time slot is no longer available. Please select a different time.';
         } else if (error.message.includes('network') || error.message.includes('fetch')) {
           errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.includes('CORS')) {
+          errorMessage = 'Connection error. Please try again in a moment.';
         } else {
           errorMessage = `Booking failed: ${error.message}`;
         }
@@ -155,7 +157,7 @@ const AppointmentBooking: React.FC = () => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-        <h1 className="text-xl font-bold text-white">Book an Appointment with Dr. Kiran S. Sawekar</h1>
+        <h1 className="text-xl font-bold text-white">Book an Appointment with Mr. Kiran S. Sawekar</h1>
       </div>
       
       <div className="p-6">

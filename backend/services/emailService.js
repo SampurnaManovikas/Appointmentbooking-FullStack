@@ -2,6 +2,13 @@ import nodemailer from 'nodemailer';
 
 // Email configuration
 const createTransporter = () => {
+  console.log('Creating email transporter with config:', {
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    user: process.env.SMTP_USER,
+    // Don't log the password for security
+  });
+
   return nodemailer.createTransporter({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT) || 587,
@@ -18,9 +25,9 @@ const createTransporter = () => {
 
 // Admin email configuration
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'sampurnamanovikas@gmail.com';
-const CLINIC_NAME = process.env.CLINIC_NAME || 'Dr. Kiran S. Sawekar Clinic';
-const CLINIC_ADDRESS = process.env.CLINIC_ADDRESS || '123 Medical Center Drive, Healthcare City, HC 12345';
-const CLINIC_PHONE = process.env.CLINIC_PHONE || '(555) 123-4567';
+const CLINIC_NAME = process.env.CLINIC_NAME || 'Sampurna Manovikas Private Limited';
+const CLINIC_ADDRESS = process.env.CLINIC_ADDRESS || '347, Chikkegowdanapalya, 3rd block, Banashankari Stage 6, Bengaluru, Karnataka 560062';
+const CLINIC_PHONE = process.env.CLINIC_PHONE || '+91 90081 02777';
 
 /**
  * Format date for email display
@@ -117,7 +124,7 @@ const generateClientEmailHTML = (data) => {
           <ul>
             <li>Please arrive 15 minutes early for in-person appointments</li>
             <li>For video calls, you'll receive a meeting link 30 minutes before your appointment</li>
-            <li>For phone appointments, Dr. Sawekar will call you at ${data.clientPhone}</li>
+            <li>For phone appointments, Mr. Kiran will call you at ${data.clientPhone}</li>
             <li>To reschedule or cancel, please contact us at least 24 hours in advance</li>
           </ul>
           
@@ -235,6 +242,9 @@ const generateAdminEmailHTML = (data) => {
  * Send confirmation emails to both client and admin
  */
 export const sendConfirmationEmails = async (emailData) => {
+  console.log('Starting email sending process...');
+  console.log('Email data received:', emailData);
+  
   const transporter = createTransporter();
   
   const results = {
@@ -244,7 +254,19 @@ export const sendConfirmationEmails = async (emailData) => {
   };
   
   try {
+    // Test the transporter first
+    console.log('Testing email transporter...');
+    await transporter.verify();
+    console.log('✅ Email transporter verified successfully');
+  } catch (error) {
+    console.error('❌ Email transporter verification failed:', error);
+    results.errors.push(`Email configuration error: ${error.message}`);
+    return results;
+  }
+  
+  try {
     // Send email to client
+    console.log('Sending client confirmation email...');
     const clientMailOptions = {
       from: `"${CLINIC_NAME}" <${process.env.SMTP_USER}>`,
       to: emailData.clientEmail,
@@ -253,7 +275,14 @@ export const sendConfirmationEmails = async (emailData) => {
       text: `Dear ${emailData.clientName}, your appointment has been confirmed for ${formatDateForEmail(emailData.appointmentDate)} at ${emailData.appointmentTime}. Booking ID: ${emailData.bookingId}`
     };
     
-    await transporter.sendMail(clientMailOptions);
+    console.log('Client email options:', {
+      from: clientMailOptions.from,
+      to: clientMailOptions.to,
+      subject: clientMailOptions.subject
+    });
+    
+    const clientResult = await transporter.sendMail(clientMailOptions);
+    console.log('Client email result:', clientResult);
     results.clientEmailSent = true;
     console.log('✅ Client confirmation email sent successfully');
     
@@ -264,6 +293,7 @@ export const sendConfirmationEmails = async (emailData) => {
   
   try {
     // Send notification to admin
+    console.log('Sending admin notification email...');
     const adminMailOptions = {
       from: `"${CLINIC_NAME} Booking System" <${process.env.SMTP_USER}>`,
       to: ADMIN_EMAIL,
@@ -272,7 +302,14 @@ export const sendConfirmationEmails = async (emailData) => {
       text: `New appointment booked: ${emailData.clientName} on ${formatDateForEmail(emailData.appointmentDate)} at ${emailData.appointmentTime}. Contact: ${emailData.clientEmail}, ${emailData.clientPhone}`
     };
     
-    await transporter.sendMail(adminMailOptions);
+    console.log('Admin email options:', {
+      from: adminMailOptions.from,
+      to: adminMailOptions.to,
+      subject: adminMailOptions.subject
+    });
+    
+    const adminResult = await transporter.sendMail(adminMailOptions);
+    console.log('Admin email result:', adminResult);
     results.adminEmailSent = true;
     console.log('✅ Admin notification email sent successfully');
     
@@ -281,6 +318,7 @@ export const sendConfirmationEmails = async (emailData) => {
     results.errors.push(`Admin email failed: ${error.message}`);
   }
   
+  console.log('Email sending process completed. Results:', results);
   return results;
 };
 
@@ -298,13 +336,16 @@ export const sendReminderEmails = async (emailData) => {
  */
 export const testEmailConfiguration = async () => {
   try {
+    console.log('Testing email configuration...');
     const transporter = createTransporter();
     await transporter.verify();
+    console.log('✅ Email configuration test passed');
     return { 
       success: true, 
       message: 'Email configuration is valid and ready to send emails' 
     };
   } catch (error) {
+    console.error('❌ Email configuration test failed:', error);
     return { 
       success: false, 
       message: 'Email configuration failed', 

@@ -1,7 +1,7 @@
 // API configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-api-name.onrender.com/api'
-  : 'http://localhost:5000/api';
+  ? 'https://appointmentbooking-fullstack-backend.onrender.com/api'
+  : 'http://localhost:3000/api';
 
 /**
  * API client with error handling
@@ -28,8 +28,16 @@ class ApiClient {
     };
 
     try {
+      console.log(`Making API request to: ${url}`);
+      console.log('Request config:', config);
+      
       const response = await fetch(url, config);
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
