@@ -1,7 +1,7 @@
 // API configuration
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
+const API_BASE_URL = import.meta.env.MODE === 'production' 
   ? 'https://appointmentbooking-fullstack-backend.onrender.com/api'
-  : 'http://localhost:3000/api';
+  : '/api';
 
 /**
  * API client with error handling
