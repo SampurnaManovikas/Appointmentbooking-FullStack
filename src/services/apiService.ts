@@ -1,7 +1,7 @@
 // API configuration
 const API_BASE_URL = import.meta.env.MODE === 'production' 
-  ? 'https://appointmentbooking-fullstack-backend.onrender.com/api'
-  : 'http://localhost:3001/api' : 'https://sampurnamanovikasbackend.netlify.app';
+  ? 'https://sampurnamanovikasbackend.netlify.app'
+  : 'http://localhost:3001/api';
 
 /**
  * API client with error handling
