@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "./contexts/AuthContext";
 import { logout } from "./services/authService";
+import coverPhoto from "./components/images/coverphoto.jpg";
+import kiranImg from "./components/images/Kiran.jpg";
 
 const TherapistProfile: React.FC = () => {
   const { state: authState, logout: authLogout } = useAuth();
@@ -32,7 +34,7 @@ const TherapistProfile: React.FC = () => {
       <div className="relative h-64 bg-gradient-to-r from-blue-400 to-blue-600">
         <img
           //  src="https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg"
-          src={"src/components/images/coverphoto.jpg"}
+          src={coverPhoto}
           alt="Mr. Kiran S. Sawekar"
           className="absolute inset-0 w-full h-full object-cover opacity-100"
         />
@@ -41,7 +43,7 @@ const TherapistProfile: React.FC = () => {
           <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden mr-6">
             <img
               // src="https://images.pexels.com/photos/5490276/pexels-photo-5490276.jpeg"
-              src={"/src/components/images/Kiran.jpg"}
+              src={kiranImg}
               // <img src={pic1} alt="pic" />
 
               alt="Mr. Kiran S. Sawekar portrait"
