@@ -38,6 +38,7 @@ const allowedOrigins = [
   "https://localhost:5174",
   "http://localhost:3000",
   "https://appointmentbooking-fullstack.netlify.app",
+   "https://sampurnamanovikas.in",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
