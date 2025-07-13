@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: appointment-booking-api
+    name: sampurna-manovikas-backend
     env: node
     plan: free
     buildCommand: npm install
@@ -10,9 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: your-frontend-app
-          property: url
+        value: https://sampurnamanovikas.in
+      - key: PORT
+        value: 10000
     autoDeploy: true
-    branch: main

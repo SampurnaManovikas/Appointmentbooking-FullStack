@@ -1,7 +1,7 @@
 // API configuration
 const API_BASE_URL = import.meta.env.MODE === 'production' 
-  ? 'https://sampurnamanovikasbackend.netlify.app'
-  : 'http://localhost:3001/api';
+  ? 'https://sampurna-manovikas-backend.onrender.com/api'
+  : 'http://localhost:3000/api';
 
 /**
  * API client with error handling
