@@ -1,6 +1,6 @@
 // API configuration
 const API_BASE_URL = import.meta.env.MODE === 'production' 
-  ? 'https://sampurna-manovikas-backend.onrender.com/api'
+  ? 'https://appointmentbooking-backend-7txu.onrender.com/api'
   : 'http://localhost:3000/api';
 
 /**
